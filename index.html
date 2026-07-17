@@ -1,1 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan EMI Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1420;
+    --panel:#121F30;
+    --panel-2:#0F1A29;
+    --border:#223349;
+    --text:#EDF2F7;
+    --muted:#7E94AF;
+    --gold:#CC9F53;
+    --gold-dim:#8A6F3C;
+    --teal:#4FB286;
+    --coral:#E2725B;
+    --blue:#6C8EEF;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:1120px;margin:0 auto;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:32px;
+    font-weight:700;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--muted);font-size:14.5px;margin-bottom:28px;}
+  .grid{display:grid;grid-template-columns:1.1fr 1.4fr;gap:20px;}
+  @media(max-width:860px){.grid{grid-template-columns:1fr;}}
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+  }
+  .card h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px;
+    margin:0 0 18px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2 .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;color:var(--bg);background:var(--gold);
+    width:20px;height:20px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    flex:none;
+  }
+  label{
+    display:block;font-size:12.5px;color:var(--muted);margin:16px 0 6px;
+    font-weight:500;
+  }
+  label:first-of-type{margin-top:0;}
+  .field-row{display:flex;align-items:center;gap:10px;}
+  input[type=number]{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14.5px;
+    padding:9px 10px;
+    border-radius:8px;
+    width:100%;
+    outline:none;
+  }
+  input[type=number]:focus{border-color:var(--gold-dim);}
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:4px;
+    border-radius:2px;
+    background:var(--border);
+    margin-top:8px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:15px;height:15px;border-radius:50%;
+    background:var(--gold);cursor:pointer;
+    border:2px solid var(--bg);
+  }
+  .prefix{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:13px;}
+  .mode-toggle{
+    display:flex;background:var(--panel-2);border:1px solid var(--border);
+    border-radius:9px;padding:3px;margin-bottom:4px;
+  }
+  .mode-toggle button{
+    flex:1;background:transparent;border:none;color:var(--muted);
+    font-family:'Inter';font-size:12.5px;font-weight:600;padding:8px 6px;
+    border-radius:7px;cursor:pointer;transition:.15s;
+  }
+  .mode-toggle button.active{background:var(--gold);color:var(--bg);}
+  .hero{
+    background:linear-gradient(160deg,var(--panel) 0%, var(--panel-2) 100%);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:26px 24px;
+    margin-bottom:20px;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+    gap:18px;
+  }
+  .hero-emi .eyebrow{margin-bottom:8px;}
+  .emi-value{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:42px;font-weight:700;color:var(--gold);
+    line-height:1;
+  }
+  .hero-stats{display:flex;gap:26px;flex-wrap:wrap;}
+  .stat{min-width:110px;}
+  .stat .lbl{font-size:11.5px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;}
+  .stat .val{font-family:'IBM Plex Mono',monospace;font-size:16.5px;font-weight:600;}
+  .donut-wrap{display:flex;align-items:center;gap:16px;}
+  .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;}
+  .chart-card{margin-top:20px;}
+  .chart-card canvas{max-height:220px;}
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  thead th{
+    text-align:right;color:var(--muted);font-weight:500;font-size:11px;
+    text-transform:uppercase;letter-spacing:.05em;
+    padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);
+  }
+  thead th:first-child,tbody td:first-child{text-align:left;}
+  tbody td{padding:7px 10px;text-align:right;border-bottom:1px solid rgba(34,51,73,0.5);}
+  tbody tr.part-row{background:rgba(108,142,239,0.08);}
+  .table-scroll{max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;margin-top:6px;}
+  .view-toggle{display:flex;gap:6px;margin-bottom:0;}
+  .view-toggle button{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--muted);
+    font-size:11.5px;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'Inter';font-weight:600;
+  }
+  .view-toggle button.active{background:var(--border);color:var(--text);}
+  .card-head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .card-head-row h2{margin:0;}
+  .part-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:520px){.part-grid{grid-template-columns:1fr;}}
+  .radio-row{display:flex;gap:10px;margin-top:6px;}
+  .radio-opt{
+    flex:1;border:1px solid var(--border);background:var(--panel-2);
+    border-radius:9px;padding:10px 12px;cursor:pointer;transition:.15s;
+  }
+  .radio-opt.selected{border-color:var(--gold);background:rgba(204,159,83,0.08);}
+  .radio-opt .t{font-size:12.5px;font-weight:600;margin-bottom:2px;}
+  .radio-opt .d{font-size:11px;color:var(--muted);}
+  .btn{
+    background:var(--gold);color:var(--bg);border:none;border-radius:9px;
+    padding:11px 18px;font-family:'Inter';font-weight:600;font-size:13.5px;
+    cursor:pointer;margin-top:16px;width:100%;
+  }
+  .btn.secondary{background:transparent;border:1px solid var(--border);color:var(--muted);margin-top:8px;}
+  .result-banner{
+    margin-top:18px;padding:16px;border-radius:10px;
+    background:rgba(79,178,134,0.08);border:1px solid rgba(79,178,134,0.35);
+    display:none;
+  }
+  .result-banner.show{display:block;}
+  .result-banner .rb-title{font-family:'Space Grotesk';font-size:14px;color:var(--teal);margin-bottom:10px;font-weight:600;}
+  .rb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
+  .rb-grid .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .rb-grid .val{font-family:'IBM Plex Mono',monospace;font-size:14.5px;font-weight:600;margin-top:2px;}
+  .footnote{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .marker-legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">EMI Planning Tool</div>
+  <h1>Loan EMI Calculator</h1>
+  <div class="sub">Work out your monthly payment, see exactly where every rupee goes each month, and test how a part-payment changes your payoff.</div>
 
+  <div class="grid">
+    <!-- LEFT: INPUTS -->
+    <div class="card">
+      <h2><span class="num">1</span>Loan details</h2>
+
+      <label>Solve for</label>
+      <div class="mode-toggle">
+        <button id="modeTenure" class="active">EMI (I know tenure)</button>
+        <button id="modeEMI">Tenure (I know EMI)</button>
+      </div>
+
+      <label>Loan amount</label>
+      <div class="field-row">
+        <span class="prefix">₹</span>
+        <input type="number" id="principal" value="1000000" min="10000" step="10000">
+      </div>
+      <input type="range" id="principalRange" min="50000" max="20000000" step="10000" value="1000000">
+
+      <label>Rate of interest (annual, %)</label>
+      <input type="number" id="rate" value="9" min="1" max="30" step="0.05">
+      <input type="range" id="rateRange" min="1" max="20" step="0.05" value="9">
+
+      <div id="tenureBlock">
+        <label>Loan tenure (years)</label>
+        <input type="number" id="tenureYears" value="5" min="0" max="30" step="1">
+        <input type="range" id="tenureRange" min="0" max="30" step="1" value="5">
+      </div>
+
+      <div id="emiBlock" style="display:none;">
+        <label>Desired EMI</label>
+        <div class="field-row">
+          <span class="prefix">₹</span>
+          <input type="number" id="desiredEMI" value="20000" min="500" step="500">
+        </div>
+      </div>
+
+      <div class="footnote" id="warnMsg" style="color:var(--coral);"></div>
+    </div>
+
+    <!-- RIGHT: HERO -->
+    <div>
+      <div class="hero">
+        <div class="hero-emi">
+          <div class="eyebrow">Monthly EMI</div>
+          <div class="emi-value" id="emiOut">₹0</div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><div class="lbl">Tenure</div><div class="val" id="tenureOut">–</div></div>
+          <div class="stat"><div class="lbl">Total interest</div><div class="val" id="totalInterestOut">–</div></div>
+          <div class="stat"><div class="lbl">Total payment</div><div class="val" id="totalPaymentOut">–</div></div>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <h2><span class="num">4</span>Principal vs. interest</h2>
+        <div class="donut-wrap">
+          <div id="donutChart" style="width:140px;height:140px;flex:none;"></div>
+          <div>
+            <div style="margin-bottom:8px;"><span class="legend-dot" style="background:var(--teal);"></span>Principal — <span id="legendPrincipal" style="font-family:'IBM Plex Mono';"></span></div>
+            <div><span class="legend-dot" style="background:var(--coral);"></span>Interest — <span id="legendInterest" style="font-family:'IBM Plex Mono';"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BALANCE CHART -->
+  <div class="card" style="margin-top:20px;">
+    <h2><span class="num">4</span>Loan balance burn-down</h2>
+    <div id="balanceChart"></div>
+    <div class="marker-legend"><span style="color:var(--blue);">┊</span> dashed line marks a part-payment, if applied below</div>
+  </div>
+
+  <!-- PAYMENT CALENDAR -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head-row">
+      <h2><span class="num">4</span>Payment calendar</h2>
+      <div class="view-toggle">
+        <button id="viewYearly" class="active">Yearly</button>
+        <button id="viewMonthly">Monthly</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Period</th><th>EMI paid</th><th>Principal</th><th>Interest</th><th>Part-payment</th><th>Balance</th></tr>
+        </thead>
+        <tbody id="scheduleBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PART PAYMENT -->
+  <div class="card" style="margin-top:20px;">
+    <h2><span class="num">5</span>Part-payment simulator</h2>
+    <div class="footnote" style="margin-top:0;margin-bottom:10px;">Add as many part-payments as you like — one every year, a couple of lump sums, whatever fits. Each is applied in the month you specify, in order.</div>
+
+    <div class="part-grid">
+      <div>
+        <label>Part-payment amount</label>
+        <div class="field-row">
+          <span class="prefix">₹</span>
+          <input type="number" id="partAmount" value="100000" min="1000" step="5000">
+        </div>
+      </div>
+      <div>
+        <label>Applied after month #</label>
+        <input type="number" id="partMonth" value="12" min="1" step="1">
+      </div>
+    </div>
+
+    <label>What should this one do?</label>
+    <div class="radio-row">
+      <div class="radio-opt selected" id="optReduceTenure">
+        <div class="t">Reduce tenure</div>
+        <div class="d">Keep EMI the same, finish the loan sooner</div>
+      </div>
+      <div class="radio-opt" id="optReduceEMI">
+        <div class="t">Reduce EMI</div>
+        <div class="d">Keep tenure the same, pay less each month</div>
+      </div>
+    </div>
+
+    <button class="btn" id="addPart">+ Add this part-payment</button>
+    <div class="footnote" id="partWarn" style="color:var(--coral);min-height:14px;"></div>
+
+    <div id="partList" style="margin-top:14px;"></div>
+
+    <button class="btn secondary" id="clearPart">Clear all part-payments</button>
+
+    <div class="result-banner" id="partResult">
+      <div class="rb-title">With all part-payments applied</div>
+      <div class="rb-grid">
+        <div><div class="lbl">Current EMI</div><div class="val" id="rbEMI">–</div></div>
+        <div><div class="lbl">New tenure</div><div class="val" id="rbTenure">–</div></div>
+        <div><div class="lbl">Interest saved</div><div class="val" id="rbInterestSaved" style="color:var(--teal);">–</div></div>
+        <div><div class="lbl">Time saved</div><div class="val" id="rbTimeSaved" style="color:var(--teal);">–</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECONSIDER -->
+  <div class="card" style="margin-top:20px;">
+    <h2><span class="num">6</span>Reconsider EMI or tenure</h2>
+    <div class="footnote" style="margin-top:0;">
+      Use the <strong>"Solve for"</strong> toggle at the top: switch to <em>"Tenure (I know EMI)"</em> to punch in an EMI you're comfortable with and see how long the loan will run — or switch back to <em>"EMI (I know tenure)"</em> to fix the tenure and see the EMI it produces. Every chart and the payment calendar below update live with whichever you choose.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const fmtINR = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const fmtINRPrecise = n => '₹' + n.toLocaleString('en-IN', {maximumFractionDigits:0});
+
+function calcEMI(P, annualRate, months){
+  const r = annualRate/12/100;
+  if (months <= 0) return P;
+  if (r === 0) return P/months;
+  return P * r * Math.pow(1+r, months) / (Math.pow(1+r, months) - 1);
+}
+function calcTenureFromEMI(P, annualRate, EMI){
+  const r = annualRate/12/100;
+  if (r === 0) return Math.ceil(P/EMI);
+  if (EMI <= P*r) return Infinity;
+  const n = Math.log(EMI/(EMI-P*r)) / Math.log(1+r);
+  return Math.ceil(n);
+}
+
+function buildSchedule(P, annualRate, months, EMI, partPayments){
+  const r = annualRate/12/100;
+  let balance = P;
+  let schedule = [];
+  let currentEMI = EMI;
+  let totalMonths = months;
+  const parts = (partPayments||[]).slice().sort((a,b)=>a.atMonth-b.atMonth);
+  for (let m=1; m<=totalMonths && m<=1200; m++){
+    if (balance <= 0.5) break;
+    const interest = balance * r;
+    let principal = currentEMI - interest;
+    if (principal > balance){ principal = balance; }
+    let actualEMI = principal + interest;
+    balance = Math.max(0, balance - principal);
+    let partPaidThisMonth = 0;
+    const matches = parts.filter(p=>p.atMonth === m);
+    for (const pp of matches){
+      if (balance <= 0.5) break;
+      const paid = Math.min(pp.amount, balance);
+      partPaidThisMonth += paid;
+      balance -= paid;
+      if (balance > 0.5){
+        if (pp.mode === 'reduceEMI'){
+          const remainingMonths = Math.max(1, totalMonths - m);
+          currentEMI = calcEMI(balance, annualRate, remainingMonths);
+        } else {
+          const newRemaining = calcTenureFromEMI(balance, annualRate, currentEMI);
+          totalMonths = newRemaining === Infinity ? totalMonths : m + newRemaining;
+        }
+      }
+    }
+    schedule.push({month:m, emi:actualEMI, principal, interest, part:partPaidThisMonth, balance});
+    if (balance <= 0.5) break;
+  }
+  return schedule;
+}
+
+let state = { mode:'tenure', schedule:[], baseSchedule:[], partActive:false, partList:[] };
+
+function getInputs(){
+  return {
+    P: parseFloat(document.getElementById('principal').value) || 0,
+    rate: parseFloat(document.getElementById('rate').value) || 0,
+    years: parseFloat(document.getElementById('tenureYears').value) || 0,
+    desiredEMI: parseFloat(document.getElementById('desiredEMI').value) || 0
+  };
+}
+
+function recompute(){
+  const {P, rate, years, desiredEMI} = getInputs();
+  const warn = document.getElementById('warnMsg');
+  warn.textContent = '';
+  let months, emi;
+
+  if (state.mode === 'tenure'){
+    months = Math.round(years*12);
+    if (months <= 0){ warn.textContent='Enter a tenure greater than 0.'; return; }
+    emi = calcEMI(P, rate, months);
+  } else {
+    emi = desiredEMI;
+    months = calcTenureFromEMI(P, rate, emi);
+    if (months === Infinity || months > 1200){
+      warn.textContent = 'This EMI is too low to ever pay off the loan at this rate — try a higher EMI.';
+      months = 1200;
+      emi = calcEMI(P, rate, months);
+    }
+  }
+
+  const baseSchedule = buildSchedule(P, rate, months, emi, null);
+  state.baseSchedule = baseSchedule;
+  state.baseP = P; state.baseRate = rate; state.baseMonths = months; state.baseEMI = emi;
+
+  if (state.partActive && state.partList.length){
+    state.schedule = buildSchedule(P, rate, months, emi, state.partList);
+  } else {
+    state.schedule = baseSchedule;
+  }
+
+  renderAll();
+  if (state.partActive && state.partList.length){ updatePartResultBanner(); }
+}
+
+function totalsOf(schedule){
+  const totalInterest = schedule.reduce((s,r)=>s+r.interest,0);
+  const totalPrincipalPaid = schedule.reduce((s,r)=>s+r.principal,0);
+  const totalPart = schedule.reduce((s,r)=>s+r.part,0);
+  const totalPayment = totalInterest + totalPrincipalPaid + 0; // part payments already counted within principal reduction, but paid as cash too
+  const totalCashOut = schedule.reduce((s,r)=>s+r.emi+r.part,0);
+  return {totalInterest, totalPrincipalPaid, totalCashOut, months: schedule.length};
+}
+
+function renderAll(){
+  const s = state.schedule;
+  const first = s[0] || {emi:0};
+  document.getElementById('emiOut').textContent = fmtINR(state.baseEMI);
+  const t = totalsOf(s);
+  const yrs = Math.floor(t.months/12), mos = t.months%12;
+  document.getElementById('tenureOut').textContent = `${yrs}y ${mos}m`;
+  document.getElementById('totalInterestOut').textContent = fmtINR(t.totalInterest);
+  document.getElementById('totalPaymentOut').textContent = fmtINR(t.totalCashOut);
+
+  document.getElementById('legendPrincipal').textContent = fmtINR(state.baseP);
+  document.getElementById('legendInterest').textContent = fmtINR(t.totalInterest);
+
+  renderDonut(state.baseP, t.totalInterest);
+  renderBalanceChart(s, state.partActive ? state.partList : []);
+  renderTable();
+}
+
+function renderDonut(principal, interest){
+  const el = document.getElementById('donutChart');
+  const total = principal + interest || 1;
+  const size = 140, r = 54, cx = size/2, cy = size/2, stroke = 16;
+  const circumference = 2 * Math.PI * r;
+  const principalLen = circumference * (principal/total);
+  el.innerHTML = `
+    <svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E2725B" stroke-width="${stroke}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#4FB286" stroke-width="${stroke}"
+        stroke-dasharray="${principalLen} ${circumference}" stroke-dashoffset="0"
+        transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt"/>
+      <text x="${cx}" y="${cy-3}" text-anchor="middle" fill="#EDF2F7" font-family="Space Grotesk" font-size="15" font-weight="700">${Math.round(principal/total*100)}%</text>
+      <text x="${cx}" y="${cy+14}" text-anchor="middle" fill="#7E94AF" font-family="Inter" font-size="9">principal</text>
+    </svg>`;
+}
+
+function renderBalanceChart(schedule, partPayments){
+  const el = document.getElementById('balanceChart');
+  if (!schedule.length){ el.innerHTML=''; return; }
+  const W = 700, H = 220, padL = 56, padR = 16, padT = 14, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = schedule.length;
+  const maxBal = Math.max(schedule[0].balance, 1);
+  const xFor = i => padL + (n>1 ? (i/(n-1))*plotW : 0);
+  const yFor = bal => padT + plotH - (bal/maxBal)*plotH;
+
+  const pts = schedule.map((r,i)=>[xFor(i), yFor(r.balance)]);
+  const lineD = 'M' + pts.map(p=>p.join(',')).join(' L');
+  const areaD = lineD + ` L${xFor(n-1)},${padT+plotH} L${xFor(0)},${padT+plotH} Z`;
+
+  // horizontal gridlines + y labels (0%, 33%, 66%, 100% of starting balance)
+  let gridLines = '';
+  for (let f=0; f<=3; f++){
+    const y = padT + plotH - (f/3)*plotH;
+    const val = (maxBal*(f/3))/100000;
+    gridLines += `<line x1="${padL}" y1="${y}" x2="${padL+plotW}" y2="${y}" stroke="#223349" stroke-width="1"/>`;
+    gridLines += `<text x="${padL-8}" y="${y+3}" text-anchor="end" fill="#7E94AF" font-family="IBM Plex Mono" font-size="10">₹${val.toFixed(1)}L</text>`;
+  }
+
+  // x-axis year labels
+  const totalYears = Math.ceil(n/12);
+  const yearStep = Math.max(1, Math.ceil(totalYears/6));
+  let xLabels = '';
+  for (let y=0; y<=totalYears; y+=yearStep){
+    const i = Math.min(n-1, y*12);
+    xLabels += `<text x="${xFor(i)}" y="${padT+plotH+18}" text-anchor="middle" fill="#7E94AF" font-family="IBM Plex Mono" font-size="10">Y${y}</text>`;
+  }
+
+  // part-payment markers
+  let markers = '';
+  (partPayments||[]).forEach(pp=>{
+    const i = Math.min(n-1, Math.max(0, pp.atMonth-1));
+    const x = xFor(i);
+    markers += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT+plotH}" stroke="#6C8EEF" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    markers += `<circle cx="${x}" cy="${yFor(schedule[i].balance)}" r="3.5" fill="#6C8EEF"/>`;
+  });
+
+  el.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" width="100%" height="220" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="balFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#CC9F53" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#CC9F53" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${gridLines}
+      <path d="${areaD}" fill="url(#balFill)"/>
+      <path d="${lineD}" fill="none" stroke="#CC9F53" stroke-width="2.25"/>
+      ${markers}
+      ${xLabels}
+    </svg>`;
+}
+
+let scheduleView = 'yearly';
+function renderTable(){
+  const body = document.getElementById('scheduleBody');
+  body.innerHTML = '';
+  const s = state.schedule;
+  if (scheduleView === 'monthly'){
+    s.forEach(r=>{
+      const tr = document.createElement('tr');
+      if (r.part>0) tr.classList.add('part-row');
+      tr.innerHTML = `<td>Month ${r.month}</td><td>${fmtINR(r.emi)}</td><td>${fmtINR(r.principal)}</td><td>${fmtINR(r.interest)}</td><td>${r.part>0?fmtINR(r.part):'–'}</td><td>${fmtINR(r.balance)}</td>`;
+      body.appendChild(tr);
+    });
+  } else {
+    for (let y=0; y*12 < s.length; y++){
+      const yearRows = s.slice(y*12, y*12+12);
+      const emi = yearRows.reduce((a,r)=>a+r.emi,0);
+      const principal = yearRows.reduce((a,r)=>a+r.principal,0);
+      const interest = yearRows.reduce((a,r)=>a+r.interest,0);
+      const part = yearRows.reduce((a,r)=>a+r.part,0);
+      const balance = yearRows[yearRows.length-1].balance;
+      const tr = document.createElement('tr');
+      if (part>0) tr.classList.add('part-row');
+      tr.innerHTML = `<td>Year ${y+1}</td><td>${fmtINR(emi)}</td><td>${fmtINR(principal)}</td><td>${fmtINR(interest)}</td><td>${part>0?fmtINR(part):'–'}</td><td>${fmtINR(balance)}</td>`;
+      body.appendChild(tr);
+    }
+  }
+}
+
+// --- Wiring ---
+function syncPair(numId, rangeId){
+  const num = document.getElementById(numId), range = document.getElementById(rangeId);
+  num.addEventListener('input', ()=>{ range.value = num.value; recompute(); });
+  range.addEventListener('input', ()=>{ num.value = range.value; recompute(); });
+}
+syncPair('principal','principalRange');
+syncPair('rate','rateRange');
+syncPair('tenureYears','tenureRange');
+document.getElementById('desiredEMI').addEventListener('input', recompute);
+
+document.getElementById('modeTenure').addEventListener('click', ()=>{
+  state.mode='tenure';
+  document.getElementById('modeTenure').classList.add('active');
+  document.getElementById('modeEMI').classList.remove('active');
+  document.getElementById('tenureBlock').style.display='block';
+  document.getElementById('emiBlock').style.display='none';
+  recompute();
+});
+document.getElementById('modeEMI').addEventListener('click', ()=>{
+  state.mode='emi';
+  document.getElementById('modeEMI').classList.add('active');
+  document.getElementById('modeTenure').classList.remove('active');
+  document.getElementById('tenureBlock').style.display='none';
+  document.getElementById('emiBlock').style.display='block';
+  recompute();
+});
+
+document.getElementById('viewYearly').addEventListener('click', ()=>{
+  scheduleView='yearly';
+  document.getElementById('viewYearly').classList.add('active');
+  document.getElementById('viewMonthly').classList.remove('active');
+  renderTable();
+});
+document.getElementById('viewMonthly').addEventListener('click', ()=>{
+  scheduleView='monthly';
+  document.getElementById('viewMonthly').classList.add('active');
+  document.getElementById('viewYearly').classList.remove('active');
+  renderTable();
+});
+
+let partMode = 'reduceTenure';
+document.getElementById('optReduceTenure').addEventListener('click', ()=>{
+  partMode='reduceTenure';
+  document.getElementById('optReduceTenure').classList.add('selected');
+  document.getElementById('optReduceEMI').classList.remove('selected');
+});
+document.getElementById('optReduceEMI').addEventListener('click', ()=>{
+  partMode='reduceEMI';
+  document.getElementById('optReduceEMI').classList.add('selected');
+  document.getElementById('optReduceTenure').classList.remove('selected');
+});
+
+function renderPartList(){
+  const container = document.getElementById('partList');
+  container.innerHTML = '';
+  if (!state.partList.length) return;
+  const sorted = state.partList.slice().sort((a,b)=>a.atMonth-b.atMonth);
+  sorted.forEach((pp)=>{
+    const idx = state.partList.indexOf(pp);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:6px;font-size:12.5px;';
+    row.innerHTML = `<span><strong style="font-family:'IBM Plex Mono';color:var(--gold);">${fmtINR(pp.amount)}</strong> after month ${pp.atMonth} · <span style="color:var(--muted);">${pp.mode==='reduceEMI' ? 'reduce EMI' : 'reduce tenure'}</span></span>`;
+    const btn = document.createElement('button');
+    btn.textContent = '×';
+    btn.style.cssText = 'background:transparent;border:none;color:var(--coral);font-size:16px;cursor:pointer;line-height:1;padding:0 4px;';
+    btn.addEventListener('click', ()=>{
+      state.partList.splice(idx,1);
+      if (!state.partList.length){ state.partActive = false; document.getElementById('partResult').classList.remove('show'); }
+      renderPartList();
+      recompute();
+    });
+    row.appendChild(btn);
+    container.appendChild(row);
+  });
+}
+
+function updatePartResultBanner(){
+  const baseTotals = totalsOf(state.baseSchedule);
+  const newTotals = totalsOf(state.schedule);
+  const lastReduceEMI = state.partList.slice().sort((a,b)=>a.atMonth-b.atMonth).filter(p=>p.mode==='reduceEMI').pop();
+  const currentEMI = state.schedule[state.schedule.length-1] ? (lastReduceEMI ? state.schedule.find(r=>r.month>lastReduceEMI.atMonth)?.emi : state.baseEMI) : state.baseEMI;
+
+  document.getElementById('rbEMI').textContent = fmtINR(currentEMI || state.baseEMI);
+  const ny = Math.floor(newTotals.months/12), nm = newTotals.months%12;
+  document.getElementById('rbTenure').textContent = `${ny}y ${nm}m`;
+  document.getElementById('rbInterestSaved').textContent = fmtINR(Math.max(0, baseTotals.totalInterest - newTotals.totalInterest));
+  const monthsSaved = Math.max(0, baseTotals.months - newTotals.months);
+  document.getElementById('rbTimeSaved').textContent = monthsSaved>0 ? `${Math.floor(monthsSaved/12)}y ${monthsSaved%12}m` : '—';
+  document.getElementById('partResult').classList.add('show');
+}
+
+document.getElementById('addPart').addEventListener('click', ()=>{
+  const warnEl = document.getElementById('partWarn');
+  const amount = parseFloat(document.getElementById('partAmount').value) || 0;
+  const atMonth = parseInt(document.getElementById('partMonth').value) || 0;
+  warnEl.textContent = '';
+  if (amount <= 0){
+    warnEl.textContent = 'Enter a part-payment amount greater than 0.';
+    return;
+  }
+  if (atMonth < 1 || atMonth > state.baseMonths){
+    warnEl.textContent = `Enter a month between 1 and ${state.baseMonths} (your current tenure in months).`;
+    return;
+  }
+  state.partList.push({ amount, atMonth, mode: partMode });
+  state.partActive = true;
+  renderPartList();
+  recompute();
+});
+
+document.getElementById('clearPart').addEventListener('click', ()=>{
+  state.partActive = false;
+  state.partList = [];
+  renderPartList();
+  document.getElementById('partResult').classList.remove('show');
+  recompute();
+});
+
+recompute();
+</script>
+</body>
+</html>
